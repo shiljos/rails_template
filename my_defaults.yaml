@@ -1,0 +1,35 @@
+recipes:
+- git
+- setup
+- gems
+- testing
+- email
+- frontend
+- deployment
+- extras
+
+
+prefs:
+  :dev_webserver: webrick
+  :prod_webserver: same
+  :database: postgresql
+  :git: true
+  :templates: erb
+  :tests: rspec
+  :unit_test: rspec
+  :integration: rspec-capybara
+  :fixtures: factory_girl
+  :railsapps: rails-prelaunch-signup
+  :form_builder: none
+  :email: mandrill
+  :authentication: devise
+  :devise_modules: default
+  :authorization: pundit
+  :frontend: bootstrap3
+  :local_env_file: figaro
+  :deployment: capistrano3
+
+gems:
+- nokogiri
+- high_voltage
+- will_paginate
