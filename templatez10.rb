@@ -703,14 +703,28 @@ after_bundler do
     remove_file 'config/database.yml' if prefer :orm, 'mongoid'
     if prefer :database, 'postgresql'
       begin
-        pg_username = prefs[:pg_username] || ask_wizard("Username for PostgreSQL?(leave blank to use the app name)")
-        pg_host = prefs[:pg_host] || ask_wizard("Host for PostgreSQL in database.yml? (leave blank to use default socket connection)")
+        pg_username = prefs[:pg_username] || ask_wizard("Username for PostgreSQL?(leave blank to use the default settings)")
+        #pg_host = prefs[:pg_host] || ask_wizard("Host for PostgreSQL in database.yml? (leave blank to use default socket connection)")
         if pg_username.blank?
           say_wizard "Creating a user named '#{app_name}' for PostgreSQL"
-          run "createuser --createdb #{app_name}" if prefer :database, 'postgresql'
+          run "sudo -u postgres createuser --createdb --pwprompt #{app_name}" if prefer :database, 'postgresql'
           gsub_file "config/database.yml", /username: .*/, "username: #{app_name}"
+          say_wizard "Creating test and development databases"
+          run "sudo -u postgres createdb --owner=#{app_name} #{app_name}_development"
+          run "sudo -u postgres createdb --owner=#{app_name} #{app_name}_test"
+          prefs[:pg_password] = "secret"
+          pg_password = prefs[:pg_password]
+          gsub_file "config/database.yml", /password:/, "password: #{pg_password}"
+          prefs[:pg_host] = "localhost"
+          pg_host = prefs[:pg_host]
         else
+        	say_wizard "Creating a user named '#{app_name}' for PostgreSQL"
+          run "sudo -u postgres createuser --createdb --pwprompt #{pg_username}" if prefer :database, 'postgresql'
+          say_wizard "Creating test and development databases #{app_name}"
+          run "sudo -u postgres createdb --owner=#{pg_username} #{app_name}_development"
+          run "sudo -u postgres createdb --owner=#{pg_username} #{app_name}_test"
           gsub_file "config/database.yml", /username: .*/, "username: #{pg_username}"
+        	pg_host = prefs[:pg_host] || ask_wizard("Host for PostgreSQL in database.yml? (leave blank to use default socket connection)")
           pg_password = prefs[:pg_password] || ask_wizard("Password for PostgreSQL user #{pg_username}?")
           gsub_file "config/database.yml", /password:/, "password: #{pg_password}"
           say_wizard "set config/database.yml for username/password #{pg_username}/#{pg_password}"
@@ -1334,11 +1348,14 @@ end # after_bundler
 @before_configs["extras"].call if @before_configs["extras"]
 say_recipe 'extras'
 config = {}
-config['ban_spiders'] = yes_wizard?("Set a robots.txt file to ban spiders?") if true && true unless config.key?('ban_spiders') || prefs.has_key?(:ban_spiders)
+#config['ban_spiders'] = yes_wizard?("Set a robots.txt file to ban spiders?") if true && true unless config.key?('ban_spiders') || prefs.has_key?(:ban_spiders)
+config['ban_spiders'] = true
 config['github'] = yes_wizard?("Create a GitHub repository?") if true && true unless config.key?('github') || prefs.has_key?(:github)
 config['local_env_file'] = multiple_choice("Add gem and file for environment variables?", [["None", "none"], ["Add .env with Foreman", "foreman"], ["Add application.yml with Figaro", "figaro"]]) if true && true unless config.key?('local_env_file') || prefs.has_key?(:local_env_file)
-config['quiet_assets'] = yes_wizard?("Reduce assets logger noise during development?") if true && true unless config.key?('quiet_assets') || prefs.has_key?(:quiet_assets)
-config['better_errors'] = yes_wizard?("Improve error reporting with 'better_errors' during development?") if true && true unless config.key?('better_errors') || prefs.has_key?(:better_errors)
+#config['quiet_assets'] = yes_wizard?("Reduce assets logger noise during development?") if true && true unless config.key?('quiet_assets') || prefs.has_key?(:quiet_assets)
+config['quiet_assets'] = false
+#config['better_errors'] = yes_wizard?("Improve error reporting with 'better_errors' during development?") if true && true unless config.key?('better_errors') || prefs.has_key?(:better_errors)
+config['better_errors'] = true
 config['pry'] = yes_wizard?("Use 'pry' as console replacement during development and test?") if true && true unless config.key?('pry') || prefs.has_key?(:pry)
 @configs[@current_recipe] = config
 # >---------------------------- recipes/extras.rb ----------------------------start<
@@ -1483,14 +1500,14 @@ if prefs[:ban_spiders]
 end
 
 ## JSRUNTIME
-case RbConfig::CONFIG['host_os']
-  when /linux/i
-    prefs[:jsruntime] = yes_wizard? "Add 'therubyracer' JavaScript runtime (for Linux users without node.js)?" unless prefs.has_key? :jsruntime
-    if prefs[:jsruntime]
-      say_wizard "recipe adding 'therubyracer' JavaScript runtime gem"
-      add_gem 'therubyracer', :platform => :ruby
-    end
-end
+# case RbConfig::CONFIG['host_os']
+#   when /linux/i
+#     prefs[:jsruntime] = yes_wizard? "Add 'therubyracer' JavaScript runtime (for Linux users without node.js)?" unless prefs.has_key? :jsruntime
+#     if prefs[:jsruntime]
+#       say_wizard "recipe adding 'therubyracer' JavaScript runtime gem"
+#       add_gem 'therubyracer', :platform => :ruby
+#     end
+# end
 
 ## AFTER_EVERYTHING
 after_everything do
