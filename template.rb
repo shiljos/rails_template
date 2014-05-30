@@ -560,7 +560,8 @@ if prefer :templates, 'slim'
   add_gem 'haml2slim', :group => :development
   add_gem 'html2haml', :group => :development
 end
-
+#Mailchimp gem
+  #add_gem 'gibbon', github: 'amro/gibbon'
 ## Testing Framework
 if rails_4_1?
   if prefer :tests, 'rspec'
@@ -1611,6 +1612,10 @@ if prefer :deployment, 'capistrano3'
   copy_from_repo 'config/deploy/production.rb', :repo => repo
   copy_from_repo 'config/deploy/staging.rb', :repo => repo
 
+  # copy_from_repo 'app/models/mandrill_delivery.rb', :repo => repo
+  # copy_from_repo 'config/initializers/mailer.rb', :repo => repo
+  # copy_from_repo 'config/initializers/mailchimp.rb', :repo => repo
+  
 
 end
 # >-------------------------- recipes/deployment.rb --------------------------end<
